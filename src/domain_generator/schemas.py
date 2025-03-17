@@ -809,15 +809,6 @@ class Reach(BaseModel):
     reach_classification: ReachClassification
     times: List[datetime]
     forecast: List[float]
-    
-
-class ProcessedData(BaseModel):
-
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
-    lid: str
-    downstream_lid: str
-    reaches: Optional[List[Reach]]
-
 
 class ResultItem(BaseModel):
     """
