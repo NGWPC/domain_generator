@@ -51,6 +51,4 @@ RUN uv venv
 RUN source .venv/bin/activate
 RUN uv pip install -e .
 
-CMD ["tail", "-f", "/dev/null"]
-
-# RUN uv --version && R --version
+CMD ["python", "scripts/generate_domains.py"]
