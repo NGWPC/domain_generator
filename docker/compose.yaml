@@ -8,6 +8,6 @@ services:
       - RABBITMQ_HOST=${RABBIT_HOST}
     volumes:
       - type: bind
-        source: ${DATA_DIR}
-        target: ${CONTAINER_DATA_DIR}
-    command: sh -c "source .venv/bin/activate && tail -f /dev/null"
+        source: ${PROJECT_DIR}
+        target: ${CONTAINER_PROJECT_DIR}
+    command: tail -f /dev/null
