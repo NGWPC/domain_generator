@@ -99,6 +99,7 @@ def run(
                     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def generate_domains() -> None:
+    print(settings.pika_url)
     connection = pika.BlockingConnection(pika.URLParameters(settings.pika_url))
     channel = connection.channel()
 

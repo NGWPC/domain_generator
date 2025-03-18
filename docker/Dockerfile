@@ -51,4 +51,6 @@ RUN uv venv
 RUN source .venv/bin/activate
 RUN uv pip install -e .
 
-CMD ["python", "scripts/generate_domains.py"]
+RUN chmod +x /api/entrypoint.sh
+
+CMD ["tail", "-f", "/dev/null"]

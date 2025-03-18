@@ -1,0 +1,13 @@
+services:
+  domain_generator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: domain_generator
+    environment:
+      - RABBITMQ_HOST=${RABBIT_HOST}
+    volumes:
+      - type: bind
+        source: ${DATA_DIR}
+        target: ${CONTAINER_DATA_DIR}
+    command: sh -c "source .venv/bin/activate && tail -f /dev/null"
