@@ -1,5 +1,6 @@
 services:
   domain_generator:
+    # image: domain_generator:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile

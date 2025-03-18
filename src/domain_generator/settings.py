@@ -27,9 +27,6 @@ class Settings:
         self.rabbitmq_host = self.config['RABBITMQ']['host']
         self.rabbitmq_port = self.config.getint('RABBITMQ', 'port')
         
-        self.redis_url = self.config['REDIS']['url']
-        self.redis_port = self.config.getint('REDIS', 'port')
-        
         self.flooded_data_queue = self.config['QUEUES']['flooded_data']
         self.error_queue = self.config['QUEUES']['error']
         
@@ -47,7 +44,3 @@ class Settings:
         
         if os.getenv("PIKA_URL"):
             self.pika_url = os.getenv("PIKA_URL")
-        
-        if os.getenv("REDIS_URL"):
-            self.redis_url = os.getenv("REDIS_URL")
-
