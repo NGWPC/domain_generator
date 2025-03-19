@@ -69,34 +69,51 @@ def run(
    properties: pika.spec.BasicProperties,
    body: bytes
 ):
-    hml = json.loads(body.decode())
-    print(f"Reading forecast for {hml['rdf']}, issued at {hml['issuance_time']}")
-    site_data = get(hml["rdf"], headers=settings.headers).json()
-    gpkg_path = Path.cwd() / str(settings.gpkg_path)
-    forecasts = format_xml(site_data["productText"], settings)
-    if len(forecasts) == 0:
-        # There is no forecast present in this message. End the process
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-    else:
+    try:
+        hml = json.loads(body.decode())
+        print(f"Reading forecast for {hml['rdf']}, issued at {hml['issuance_time']}")
+        
+        ch.connection.process_data_events(0)
+        
+        site_data = get(hml["rdf"], headers=settings.headers).json()
+        gpkg_path = Path.cwd() / str(settings.gpkg_path)
+        forecasts = format_xml(site_data["productText"], settings)
+        
+        if len(forecasts) == 0:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
         for forecast in forecasts:
+            ch.connection.process_data_events(0)
+            
             processed_data = pull_nwm_inputs(forecast, settings)
             if processed_data is None:
                 # The streamflow forecast is -999
-                ch.basic_ack(delivery_tag=method.delivery_tag)
-            else:
-                filepath = Path.cwd() / f"{processed_data.lid}.gpkg"
-                if filepath.exists():
-                    # The gpkg already exists
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                else:
-                    # Generating the domain
-                    get_shortest_path(
-                        start_id=processed_data.start_id,
-                        end_id=processed_data.end_id,
-                        gpkg=gpkg_path,
-                        filename=processed_data.lid,
-                    )
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                continue
+                
+            filepath = Path.cwd() / f"{processed_data.lid}.gpkg"
+            if filepath.exists():
+                continue
+                
+            ch.connection.process_data_events(0)
+                
+            get_shortest_path(
+                start_id=processed_data.start_id,
+                end_id=processed_data.end_id,
+                gpkg=str(gpkg_path),
+                filename=processed_data.lid,
+            )
+            
+            ch.connection.process_data_events(0)
+            
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+    except pika.exceptions.ChannelClosedByBroker as e:
+        print(f"Error processing message: {str(e)}")
+        try:
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        except Exception as ack_error:
+            print(f"Failed to nack message: {ack_error}")
 
 def generate_domains() -> None:
     print(settings.pika_url)
@@ -107,6 +124,6 @@ def generate_domains() -> None:
     print(f' [*] Waiting for messages from Queue on URL: {settings.pika_url}')
 
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=settings.flooded_data_queue, on_message_callback=run)
+    channel.basic_consume(queue=settings.flooded_data_queue, on_message_callback=run, auto_ack=False)
 
     channel.start_consuming()

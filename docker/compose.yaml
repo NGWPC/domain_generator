@@ -1,5 +1,6 @@
 services:
   domain_generator:
+    # Uncomment if you want to load from an existing container
     # image: docker-domain_generator:latest
     build:
       context: ..
