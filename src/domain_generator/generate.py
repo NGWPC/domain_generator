@@ -24,7 +24,11 @@ def pull_nwm_inputs(forecast, settings: Settings) -> ProcessedData:
     else:
         metadata_endpoint = f"{settings.BASE_URL}/reaches/{forecast.reachId}"
         downstream_metadata = get(metadata_endpoint).json()
-        downstream_reach_id = int(downstream_metadata["route"]["downstream"][0]["reachId"])
+        try:
+            downstream_reach_id = int(downstream_metadata["route"]["downstream"][0]["reachId"])
+        except KeyError:
+            print(f"Error from the HML files: {downstream_metadata}. Passing")
+            return None
         processed_data = ProcessedData(
             lid = forecast.lid,
             start_id = int(forecast.reachId),
